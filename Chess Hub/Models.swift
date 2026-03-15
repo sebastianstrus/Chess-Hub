@@ -25,7 +25,7 @@ enum PuzzleCategory: String, CaseIterable, Identifiable, Codable {
 
     var gradient: [Color] {
         switch self {
-        case .mateIn1: return [Color("GoldLight"), Color("GoldDark")]
+        case .mateIn1: return [Color(hex: "#E8C96A"), Color(hex: "#8A6830")]
         case .mateIn2: return [Color(hex: "#C0A96A"), Color(hex: "#8A6E30")]
         case .mateIn3: return [Color(hex: "#A0B8D0"), Color(hex: "#5A7A9A")]
         case .mateIn4: return [Color(hex: "#9A8FC0"), Color(hex: "#5A4A8A")]
