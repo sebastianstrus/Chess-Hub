@@ -132,8 +132,8 @@ struct LiveChessBoardView: View {
                    let from  = state.draggingFrom,
                    let piece = state.piece(at: from) {
                     pieceView(piece, sqSize: sqSize)
-                        .shadow(color: .black.opacity(0.5), radius: 6)
-                        .scaleEffect(1.15)
+                        .scaleEffect(1.18)
+                        .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 4)
                         .position(dragLocation)
                         .allowsHitTesting(false)
                 }
@@ -251,28 +251,18 @@ struct LiveChessBoardView: View {
         }
     }
 
-    /// Renders a piece glyph with strong contrast on any square color.
-    /// White pieces: filled white glyph with dark outline shadow.
-    /// Black pieces: filled black glyph with bright outline shadow.
+    /// Renders a piece using the cburnett SVG piece set from lichess.
+    /// Files must be added to the Xcode project with names: wK, wQ, wR, wB, wN, wP,
+    ///                                                       bK, bQ, bR, bB, bN, bP
+    /// Download from: https://github.com/lichess-org/lila/tree/master/public/piece/cburnett
+    @ViewBuilder
     private func pieceView(_ piece: Piece, sqSize: CGFloat) -> some View {
-        let isWhite = piece.color == .white
-        let glyph = whiteSymbol(piece)
-        let fontSize = sqSize * 0.75
-        let glyphColor: Color  = isWhite ? .white : Color(hex: "#1C1008")
-        let shadowColor: Color = isWhite ? Color(hex: "#1C1008") : Color(hex: "#E8D0A0")
-
-        let o = sqSize * 0.022   // outline offset distance
-        return ZStack {
-            // 4-direction outline for contrast on any square color
-            Text(glyph).font(.system(size: fontSize, weight: .bold)).foregroundColor(shadowColor.opacity(0.85)).offset(x: -o, y: -o)
-            Text(glyph).font(.system(size: fontSize, weight: .bold)).foregroundColor(shadowColor.opacity(0.85)).offset(x:  o, y: -o)
-            Text(glyph).font(.system(size: fontSize, weight: .bold)).foregroundColor(shadowColor.opacity(0.85)).offset(x: -o, y:  o)
-            Text(glyph).font(.system(size: fontSize, weight: .bold)).foregroundColor(shadowColor.opacity(0.85)).offset(x:  o, y:  o)
-            // Main glyph on top
-            Text(glyph)
-                .font(.system(size: fontSize, weight: .bold))
-                .foregroundColor(glyphColor)
-        }
+        let name = pieceImageName(piece)
+        Image(name)
+            .resizable()
+            .scaledToFit()
+            .frame(width: sqSize * 0.88, height: sqSize * 0.88)
+            .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
     }
 
     // MARK: - Flip button
@@ -433,20 +423,21 @@ struct LiveChessBoardView: View {
         return base
     }
 
-    // MARK: - Piece symbols
-    // Always use the WHITE (outline) Unicode glyph for every piece.
-    // Color is applied via foregroundColor in pieceView(), giving
-    // consistent glyph metrics across all piece kinds (including pawn).
+    // MARK: - Piece image names (cburnett SVG set)
+    // Naming: color prefix (w/b) + piece letter (K/Q/R/B/N/P)
 
-    private func whiteSymbol(_ piece: Piece) -> String {
+    private func pieceImageName(_ piece: Piece) -> String {
+        let color = piece.color == .white ? "w" : "b"
+        let kind: String
         switch piece.kind {
-        case .king:   return "♔"
-        case .queen:  return "♕"
-        case .rook:   return "♖"
-        case .bishop: return "♗"
-        case .knight: return "♘"
-        case .pawn:   return "♙"
-        default:      return ""
+        case .king:   kind = "K"
+        case .queen:  kind = "Q"
+        case .rook:   kind = "R"
+        case .bishop: kind = "B"
+        case .knight: kind = "N"
+        case .pawn:   kind = "P"
+        default:      kind = "P"
         }
+        return "\(color)\(kind)"
     }
 }
