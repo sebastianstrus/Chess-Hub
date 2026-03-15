@@ -67,6 +67,18 @@ final class ChessBoardState {
 
     // MARK: Board queries
 
+    /// Returns the square of the king currently in check, or nil if no check.
+    var kingInCheckSquare: Square? {
+        switch board.state {
+        case .check(let color):
+            return allPieces().first { $0.kind == .king && $0.color == color }?.square
+        case .checkmate(let color):
+            return allPieces().first { $0.kind == .king && $0.color == color }?.square
+        default:
+            return nil
+        }
+    }
+
     func allPieces() -> [Piece] {
         board.position.pieces
     }
@@ -130,6 +142,7 @@ struct LiveChessBoardView: View {
 
             ZStack(alignment: .topLeading) {
                 boardLayer(sqSize: sqSize)
+                checkGlowLayer(sqSize: sqSize)
                 legalMoveLayer(sqSize: sqSize)
                 pieceLayer(sqSize: sqSize)
 
@@ -255,6 +268,34 @@ struct LiveChessBoardView: View {
                 .opacity(isGhost ? 0.20 : 1.0)
                 .position(x: CGFloat(col) * sqSize + sqSize / 2,
                           y: CGFloat(row) * sqSize + sqSize / 2)
+        }
+    }
+
+    /// Red radial glow on the king's square when in check — same as lichess.
+    @ViewBuilder
+    private func checkGlowLayer(sqSize: CGFloat) -> some View {
+        if let checkSquare = state.kingInCheckSquare {
+            let (row, col) = displayRowCol(checkSquare)
+            ZStack {
+                // Outer soft glow
+                RadialGradient(
+                    colors: [
+                        Color.red.opacity(0.75),
+                        Color.red.opacity(0.45),
+                        Color.red.opacity(0.0)
+                    ],
+                    center: .center,
+                    startRadius: sqSize * 0.05,
+                    endRadius: sqSize * 0.72
+                )
+                .frame(width: sqSize * 1.5, height: sqSize * 1.5)
+                .blendMode(.multiply)
+            }
+            .position(
+                x: CGFloat(col) * sqSize + sqSize / 2,
+                y: CGFloat(row) * sqSize + sqSize / 2
+            )
+            .allowsHitTesting(false)
         }
     }
 
