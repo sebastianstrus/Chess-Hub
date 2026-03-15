@@ -9,13 +9,16 @@ import SwiftUI
 
 @main
 struct Chess_HubApp: App {
-    @StateObject private var appState = AppState()
-
-    var body: some Scene {
-        WindowGroup {
-            RootView()
-                .environmentObject(appState)
-                .preferredColorScheme(.dark)
+    @State private var store = PuzzleStore()
+        @StateObject private var appState = AppState()
+     
+        var body: some Scene {
+            WindowGroup {
+                RootView()
+                    .environmentObject(appState)
+                    .environment(store)
+                    .preferredColorScheme(.dark)
+            }
         }
     }
-}
+     

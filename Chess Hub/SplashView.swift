@@ -141,22 +141,22 @@ struct SplashView: View {
 
 // MARK: - Chess Board Background Pattern
 
-struct ChessBoardPattern: View {
-    private let squares = 12
-    var body: some View {
-        GeometryReader { geo in
-            let size = geo.size.width / CGFloat(squares)
-            VStack(spacing: 0) {
-                ForEach(0..<squares, id: \.self) { row in
-                    HStack(spacing: 0) {
-                        ForEach(0..<squares, id: \.self) { col in
-                            Rectangle()
-                                .fill((row + col).isMultiple(of: 2) ? Color.white : Color.clear)
-                                .frame(width: size, height: size)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+//struct ChessBoardPattern: View {
+//    private let squares = 12
+//    var body: some View {
+//        GeometryReader { geo in
+//            let size = geo.size.width / CGFloat(squares)
+//            VStack(spacing: 0) {
+//                ForEach(0..<squares, id: \.self) { row in
+//                    HStack(spacing: 0) {
+//                        ForEach(0..<squares, id: \.self) { col in
+//                            Rectangle()
+//                                .fill((row + col).isMultiple(of: 2) ? Color.white : Color.clear)
+//                                .frame(width: size, height: size)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}

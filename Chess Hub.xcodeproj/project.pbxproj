@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7D20B7602F66FD50001FAC4E /* ChessKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7D20B75F2F66FD50001FAC4E /* ChessKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		7DDDEE632F65B63C00858E60 /* Chess Hub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Chess Hub.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D20B7602F66FD50001FAC4E /* ChessKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = "Chess Hub";
 			packageProductDependencies = (
+				7D20B75F2F66FD50001FAC4E /* ChessKit */,
 			);
 			productName = "Chess Hub";
 			productReference = 7DDDEE632F65B63C00858E60 /* Chess Hub.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 7DDDEE5A2F65B63C00858E60;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7D20B75E2F66FD50001FAC4E /* XCRemoteSwiftPackageReference "chesskit-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7DDDEE642F65B63C00858E60 /* Products */;
 			projectDirPath = "";
@@ -332,6 +341,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7D20B75E2F66FD50001FAC4E /* XCRemoteSwiftPackageReference "chesskit-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/chesskit-app/chesskit-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.17.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7D20B75F2F66FD50001FAC4E /* ChessKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7D20B75E2F66FD50001FAC4E /* XCRemoteSwiftPackageReference "chesskit-swift" */;
+			productName = ChessKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7DDDEE5B2F65B63C00858E60 /* Project object */;
 }
