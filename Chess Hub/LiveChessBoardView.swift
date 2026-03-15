@@ -81,8 +81,14 @@ final class ChessBoardState {
 
     // MARK: Mutations
 
-    func move(from: Square, to: Square) {
-        board.move(pieceAt: from, to: to)
+    func move(from: Square, to: Square, animated: Bool = false) {
+        if animated {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                board.move(pieceAt: from, to: to)
+            }
+        } else {
+            board.move(pieceAt: from, to: to)
+        }
     }
 
     // MARK: UCI parsing
@@ -239,15 +245,16 @@ struct LiveChessBoardView: View {
     @ViewBuilder
     private func pieceLayer(sqSize: CGFloat) -> some View {
         let pieces = state.allPieces()
-        ForEach(0..<pieces.count, id: \.self) { i in
-            let piece      = pieces[i]
+        // ID = stable piece identity: color + kind + square
+        // This prevents SwiftUI from animating position changes when the array
+        // reorders after a move (which caused pieces to swap with animation).
+        ForEach(Array(pieces.enumerated()), id: \.offset) { _, piece in
             let (row, col) = displayRowCol(piece.square)
             let isGhost    = state.isDragging && state.draggingFrom == piece.square
             pieceView(piece, sqSize: sqSize)
                 .opacity(isGhost ? 0.20 : 1.0)
                 .position(x: CGFloat(col) * sqSize + sqSize / 2,
                           y: CGFloat(row) * sqSize + sqSize / 2)
-                .animation(.spring(response: 0.25, dampingFraction: 0.8), value: piece.square)
         }
     }
 
@@ -354,8 +361,8 @@ struct LiveChessBoardView: View {
         guard state.solutionIndex < puzzle.playerMoves.count else { return }
         let uci = puzzle.playerMoves[state.solutionIndex]
         guard let (from, to) = state.parseUCI(uci) else { return }
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            state.move(from: from, to: to)
+        state.move(from: from, to: to, animated: true)
+        withAnimation(.easeInOut(duration: 0.01)) {
             state.lastMoveFrom = from
             state.lastMoveTo   = to
         }
@@ -372,12 +379,10 @@ struct LiveChessBoardView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
             let uci = puzzle.opponentFirstMove
             guard let (from, to) = state.parseUCI(uci) else { return }
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                state.move(from: from, to: to)
-                state.lastMoveFrom  = from
-                state.lastMoveTo    = to
-                state.opponentMoved = true
-            }
+            state.move(from: from, to: to, animated: true)
+            state.lastMoveFrom  = from
+            state.lastMoveTo    = to
+            state.opponentMoved = true
         }
     }
 
@@ -418,8 +423,18 @@ struct LiveChessBoardView: View {
     private func squareColor(row: Int, col: Int, sq: Square) -> Color {
         let isLight = (row + col).isMultiple(of: 2)
         let base    = isLight ? DS.Colors.pieceLight : DS.Colors.pieceDark
-        if sq == state.selectedSquare                          { return DS.Colors.gold.opacity(0.55) }
-        if sq == state.lastMoveFrom || sq == state.lastMoveTo  { return DS.Colors.gold.opacity(0.28) }
+
+        // Selected square: bright yellow highlight
+        if sq == state.selectedSquare {
+            return isLight ? Color(hex: "#F6F669") : Color(hex: "#BBCC44")
+        }
+
+        // Last move highlight: subtle yellow-green, like lichess
+        // Light squares get a pale yellow, dark squares get a muted olive green
+        if sq == state.lastMoveFrom || sq == state.lastMoveTo {
+            return isLight ? Color(hex: "#CDD16E") : Color(hex: "#AAAA44")
+        }
+
         return base
     }
 
@@ -439,5 +454,26 @@ struct LiveChessBoardView: View {
         default:      kind = "P"
         }
         return "\(color)\(kind)"
+    }
+}
+// MARK: - Piece stable identity
+extension Piece {
+    // ID includes square so each piece on a unique square has a unique, stable ID.
+    // The key insight: we want the ID to FOLLOW the piece as it moves, not stay fixed.
+    // We achieve smooth animation by wrapping board.move() in withAnimation() at the
+    // call site — SwiftUI then animates the .position() change for the matching ID.
+    var stableID: String {
+        let c = color == .white ? "w" : "b"
+        let k: String
+        switch kind {
+        case .king:   k = "K"
+        case .queen:  k = "Q"
+        case .rook:   k = "R"
+        case .bishop: k = "B"
+        case .knight: k = "N"
+        case .pawn:   k = "P"
+        default:      k = "?"
+        }
+        return "\(c)\(k)"
     }
 }
