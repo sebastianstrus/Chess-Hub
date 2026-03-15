@@ -131,9 +131,9 @@ struct LiveChessBoardView: View {
                 if state.isDragging,
                    let from  = state.draggingFrom,
                    let piece = state.piece(at: from) {
-                    Text(symbol(piece))
-                        .font(.system(size: sqSize * 0.82))
-                        .shadow(color: .black.opacity(0.5), radius: 4)
+                    pieceView(piece, sqSize: sqSize)
+                        .shadow(color: .black.opacity(0.5), radius: 6)
+                        .scaleEffect(1.15)
                         .position(dragLocation)
                         .allowsHitTesting(false)
                 }
@@ -243,13 +243,35 @@ struct LiveChessBoardView: View {
             let piece      = pieces[i]
             let (row, col) = displayRowCol(piece.square)
             let isGhost    = state.isDragging && state.draggingFrom == piece.square
-            Text(symbol(piece))
-                .font(.system(size: sqSize * 0.82))
-                .shadow(color: .black.opacity(0.35), radius: 2, x: 1, y: 2)
+            pieceView(piece, sqSize: sqSize)
                 .opacity(isGhost ? 0.20 : 1.0)
                 .position(x: CGFloat(col) * sqSize + sqSize / 2,
                           y: CGFloat(row) * sqSize + sqSize / 2)
                 .animation(.spring(response: 0.25, dampingFraction: 0.8), value: piece.square)
+        }
+    }
+
+    /// Renders a piece glyph with strong contrast on any square color.
+    /// White pieces: filled white glyph with dark outline shadow.
+    /// Black pieces: filled black glyph with bright outline shadow.
+    private func pieceView(_ piece: Piece, sqSize: CGFloat) -> some View {
+        let isWhite = piece.color == .white
+        let glyph = whiteSymbol(piece)
+        let fontSize = sqSize * 0.75
+        let glyphColor: Color  = isWhite ? .white : Color(hex: "#1C1008")
+        let shadowColor: Color = isWhite ? Color(hex: "#1C1008") : Color(hex: "#E8D0A0")
+
+        let o = sqSize * 0.022   // outline offset distance
+        return ZStack {
+            // 4-direction outline for contrast on any square color
+            Text(glyph).font(.system(size: fontSize, weight: .bold)).foregroundColor(shadowColor.opacity(0.85)).offset(x: -o, y: -o)
+            Text(glyph).font(.system(size: fontSize, weight: .bold)).foregroundColor(shadowColor.opacity(0.85)).offset(x:  o, y: -o)
+            Text(glyph).font(.system(size: fontSize, weight: .bold)).foregroundColor(shadowColor.opacity(0.85)).offset(x: -o, y:  o)
+            Text(glyph).font(.system(size: fontSize, weight: .bold)).foregroundColor(shadowColor.opacity(0.85)).offset(x:  o, y:  o)
+            // Main glyph on top
+            Text(glyph)
+                .font(.system(size: fontSize, weight: .bold))
+                .foregroundColor(glyphColor)
         }
     }
 
@@ -412,22 +434,19 @@ struct LiveChessBoardView: View {
     }
 
     // MARK: - Piece symbols
+    // Always use the WHITE (outline) Unicode glyph for every piece.
+    // Color is applied via foregroundColor in pieceView(), giving
+    // consistent glyph metrics across all piece kinds (including pawn).
 
-    private func symbol(_ piece: Piece) -> String {
-        switch (piece.kind, piece.color) {
-        case (.king,   .white): return "♔"
-        case (.queen,  .white): return "♕"
-        case (.rook,   .white): return "♖"
-        case (.bishop, .white): return "♗"
-        case (.knight, .white): return "♘"
-        case (.pawn,   .white): return "♙"
-        case (.king,   .black): return "♚"
-        case (.queen,  .black): return "♛"
-        case (.rook,   .black): return "♜"
-        case (.bishop, .black): return "♝"
-        case (.knight, .black): return "♞"
-        case (.pawn,   .black): return "♟"
-        default:                return ""
+    private func whiteSymbol(_ piece: Piece) -> String {
+        switch piece.kind {
+        case .king:   return "♔"
+        case .queen:  return "♕"
+        case .rook:   return "♖"
+        case .bishop: return "♗"
+        case .knight: return "♘"
+        case .pawn:   return "♙"
+        default:      return ""
         }
     }
 }
