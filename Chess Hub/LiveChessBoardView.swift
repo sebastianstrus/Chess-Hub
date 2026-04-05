@@ -64,7 +64,7 @@ final class ChessBoardState {
     var wrongFlash:   Bool = false
     var solutionIndex: Int = 0
     
-    // Track piece identities: maps stable ID -> current square
+    // Track piece identities: maps stable ID -> piece key (type@square)
     private var pieceIdentities: [String: String] = [:]
     private var nextPieceID = 0
 
@@ -96,7 +96,6 @@ final class ChessBoardState {
         case .bishop: k = "B"
         case .knight: k = "N"
         case .pawn:   k = "P"
-        default:      k = "?"
         }
         return "\(c)\(k)@\(piece.square.algebraic)"
     }
@@ -126,25 +125,21 @@ final class ChessBoardState {
         return result
     }
     
-    func updatePieceIdentitiesBeforeMove(from: Square, to: Square) {
-        // Update the identity map to reflect the move BEFORE it happens
-        guard let movingPiece = board.position.piece(at: from) else { return }
+    func updatePieceIdentitiesAfterMove(from: Square, to: Square) {
+        // Update the identity map AFTER the move has happened
+        guard let movedPiece = board.position.piece(at: to) else { return }
         
-        let fromKey = currentPieceKey(movingPiece)
-        let toKey = fromKey.replacingOccurrences(of: from.algebraic, with: to.algebraic)
+        let oldKey = currentPieceKey(movedPiece).replacingOccurrences(of: to.algebraic, with: from.algebraic)
+        let newKey = currentPieceKey(movedPiece)
         
-        // Find the ID that's tracking the piece at 'from' and update it to point to 'to'
-        if let id = pieceIdentities.first(where: { $0.value == fromKey })?.key {
-            pieceIdentities[id] = toKey
+        // Find the ID that was tracking the piece and update it
+        if let id = pieceIdentities.first(where: { $0.value == oldKey })?.key {
+            pieceIdentities[id] = newKey
         }
         
-        // If there's a piece being captured at 'to', remove its identity
-        if let capturedPiece = board.position.piece(at: to) {
-            let capturedKey = currentPieceKey(capturedPiece)
-            if let capturedID = pieceIdentities.first(where: { $0.value == capturedKey })?.key {
-                pieceIdentities.removeValue(forKey: capturedID)
-            }
-        }
+        // Clean up any orphaned identities (captured pieces)
+        let currentKeys = Set(allPieces().map { currentPieceKey($0) })
+        pieceIdentities = pieceIdentities.filter { currentKeys.contains($0.value) }
     }
 
     // MARK: Board queries
@@ -176,15 +171,14 @@ final class ChessBoardState {
     // MARK: Mutations
 
     func move(from: Square, to: Square, animated: Bool = false) {
-        // Update identities BEFORE the move so SwiftUI can track the piece
-        updatePieceIdentitiesBeforeMove(from: from, to: to)
-        
         if animated {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
                 board.move(pieceAt: from, to: to)
+                updatePieceIdentitiesAfterMove(from: from, to: to)
             }
         } else {
             board.move(pieceAt: from, to: to)
+            updatePieceIdentitiesAfterMove(from: from, to: to)
         }
     }
 
@@ -503,7 +497,7 @@ struct LiveChessBoardView: View {
         state.solutionIndex   = 0
         state.opponentMoved   = false
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             let uci = puzzle.opponentFirstMove
             guard let (from, to) = state.parseUCI(uci) else { return }
             state.move(from: from, to: to, animated: true)
@@ -578,7 +572,6 @@ struct LiveChessBoardView: View {
         case .bishop: kind = "B"
         case .knight: kind = "N"
         case .pawn:   kind = "P"
-        default:      kind = "P"
         }
         return "\(color)\(kind)"
     }
