@@ -21,7 +21,6 @@ enum PuzzleTheme: String, CaseIterable, Identifiable {
     case backRankMate   = "Back Rank Mate"
     case hangingPiece   = "Hanging Piece"
     case deflection     = "Deflection"
-    case decoy          = "Decoy"
     case endgame        = "Endgame"
 
     // Special
@@ -44,7 +43,6 @@ enum PuzzleTheme: String, CaseIterable, Identifiable {
         case .backRankMate:     return "backRankMate"
         case .hangingPiece:     return "hangingPiece"
         case .deflection:       return "deflection"
-        case .decoy:            return "decoy"
         case .endgame:          return "endgame"
         case .favorites:        return ""
         }
@@ -64,7 +62,6 @@ enum PuzzleTheme: String, CaseIterable, Identifiable {
         case .backRankMate:     return "arrow.down.to.line"
         case .hangingPiece:     return "exclamationmark.triangle.fill"
         case .deflection:       return "arrow.uturn.right"
-        case .decoy:            return "target"
         case .endgame:          return "flag.fill"
         case .favorites:        return "heart.fill"
         }
@@ -84,7 +81,6 @@ enum PuzzleTheme: String, CaseIterable, Identifiable {
         case .backRankMate:     return [Color(hex: "#C0D070"), Color(hex: "#708030")]
         case .hangingPiece:     return [Color(hex: "#E0A040"), Color(hex: "#906000")]
         case .deflection:       return [Color(hex: "#80C0B0"), Color(hex: "#307868")]
-        case .decoy:            return [Color(hex: "#B090D0"), Color(hex: "#604890")]
         case .endgame:          return [Color(hex: "#90A8C0"), Color(hex: "#486078")]
         case .favorites:        return [Color(hex: "#E07080"), Color(hex: "#A03050")]
         }
@@ -101,7 +97,6 @@ enum PuzzleTheme: String, CaseIterable, Identifiable {
         case .fork:             return "Intermediate"
         case .pin:              return "Intermediate"
         case .deflection:       return "Intermediate"
-        case .decoy:            return "Intermediate"
         case .sacrifice:        return "Advanced"
         case .skewer:           return "Advanced"
         case .discoveredAttack: return "Advanced"
@@ -124,7 +119,6 @@ enum PuzzleTheme: String, CaseIterable, Identifiable {
         case .backRankMate:     return "Exploit a king trapped on the back rank."
         case .hangingPiece:     return "Capture an undefended piece."
         case .deflection:       return "Lure a defending piece away from its duty."
-        case .decoy:            return "Drag a piece to a square where it can be exploited."
         case .endgame:          return "Convert a technical advantage in the endgame."
         case .favorites:        return "Puzzles you've marked as favorites."
         }
