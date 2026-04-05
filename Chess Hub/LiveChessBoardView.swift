@@ -42,6 +42,13 @@ extension Square {
     }
 }
 
+// MARK: - Identifiable Piece Wrapper
+
+struct IdentifiablePiece: Identifiable {
+    let id: String
+    let piece: Piece
+}
+
 // MARK: - ChessBoardState
 
 @Observable
@@ -56,12 +63,87 @@ final class ChessBoardState {
     var opponentMoved: Bool = false
     var wrongFlash:   Bool = false
     var solutionIndex: Int = 0
+    
+    // Track piece identities: maps stable ID -> current square
+    private var pieceIdentities: [String: String] = [:]
+    private var nextPieceID = 0
 
     init(fen: String) {
         if let position = Position(fen: fen) {
             self.board = Board(position: position)
         } else {
             self.board = Board()
+        }
+        // Initialize piece identities with starting positions
+        recordInitialPiecePositions()
+    }
+    
+    private func recordInitialPiecePositions() {
+        for piece in board.position.pieces {
+            let id = "piece-\(nextPieceID)"
+            nextPieceID += 1
+            pieceIdentities[id] = currentPieceKey(piece)
+        }
+    }
+    
+    private func currentPieceKey(_ piece: Piece) -> String {
+        let c = piece.color == .white ? "w" : "b"
+        let k: String
+        switch piece.kind {
+        case .king:   k = "K"
+        case .queen:  k = "Q"
+        case .rook:   k = "R"
+        case .bishop: k = "B"
+        case .knight: k = "N"
+        case .pawn:   k = "P"
+        default:      k = "?"
+        }
+        return "\(c)\(k)@\(piece.square.algebraic)"
+    }
+    
+    func identifiablePieces() -> [IdentifiablePiece] {
+        let pieces = allPieces()
+        var result: [IdentifiablePiece] = []
+        var usedIDs: Set<String> = []
+        
+        for piece in pieces {
+            let currentKey = currentPieceKey(piece)
+            
+            // Find the ID that currently points to this piece
+            if let id = pieceIdentities.first(where: { $0.value == currentKey && !usedIDs.contains($0.key) })?.key {
+                usedIDs.insert(id)
+                result.append(IdentifiablePiece(id: id, piece: piece))
+            } else {
+                // New piece (e.g., from promotion) - assign new ID
+                let newID = "piece-\(nextPieceID)"
+                nextPieceID += 1
+                pieceIdentities[newID] = currentKey
+                usedIDs.insert(newID)
+                result.append(IdentifiablePiece(id: newID, piece: piece))
+            }
+        }
+        
+        return result
+    }
+    
+    func updatePieceIdentitiesBeforeMove(from: Square, to: Square) {
+        // Update the identity map to reflect the move BEFORE it happens
+        guard let movingPiece = board.position.piece(at: from) else { return }
+        
+        let fromKey = currentPieceKey(movingPiece)
+        let toKey = fromKey.replacingOccurrences(of: from.algebraic, with: to.algebraic)
+        
+        // Find the ID that's tracking the piece at 'from' and update it to point to 'to'
+        if let id = pieceIdentities.first(where: { $0.value == fromKey })?.key {
+            pieceIdentities[id] = toKey
+        }
+        
+        // If there's a piece being captured at 'to', remove its identity
+        if let capturedPiece = board.position.piece(at: to) {
+            let capturedKey = currentPieceKey(capturedPiece)
+            if let capturedID = pieceIdentities.first(where: { $0.value == capturedKey })?.key {
+                pieceIdentities.removeValue(forKey: capturedID)
+            }
         }
     }
 
@@ -94,6 +176,9 @@ final class ChessBoardState {
     // MARK: Mutations
 
     func move(from: Square, to: Square, animated: Bool = false) {
+        // Update identities BEFORE the move so SwiftUI can track the piece
+        updatePieceIdentitiesBeforeMove(from: from, to: to)
+        
         if animated {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
                 board.move(pieceAt: from, to: to)
@@ -257,11 +342,12 @@ struct LiveChessBoardView: View {
 
     @ViewBuilder
     private func pieceLayer(sqSize: CGFloat) -> some View {
-        let pieces = state.allPieces()
-        // ID = stable piece identity: color + kind + square
+        let identifiablePieces = state.identifiablePieces()
+        // ID = stable piece identity based on starting position
         // This prevents SwiftUI from animating position changes when the array
         // reorders after a move (which caused pieces to swap with animation).
-        ForEach(Array(pieces.enumerated()), id: \.offset) { _, piece in
+        ForEach(identifiablePieces) { item in
+            let piece = item.piece
             let (row, col) = displayRowCol(piece.square)
             let isGhost    = state.isDragging && state.draggingFrom == piece.square
             pieceView(piece, sqSize: sqSize)
@@ -497,24 +583,4 @@ struct LiveChessBoardView: View {
         return "\(color)\(kind)"
     }
 }
-// MARK: - Piece stable identity
-extension Piece {
-    // ID includes square so each piece on a unique square has a unique, stable ID.
-    // The key insight: we want the ID to FOLLOW the piece as it moves, not stay fixed.
-    // We achieve smooth animation by wrapping board.move() in withAnimation() at the
-    // call site — SwiftUI then animates the .position() change for the matching ID.
-    var stableID: String {
-        let c = color == .white ? "w" : "b"
-        let k: String
-        switch kind {
-        case .king:   k = "K"
-        case .queen:  k = "Q"
-        case .rook:   k = "R"
-        case .bishop: k = "B"
-        case .knight: k = "N"
-        case .pawn:   k = "P"
-        default:      k = "?"
-        }
-        return "\(c)\(k)"
-    }
-}
+
