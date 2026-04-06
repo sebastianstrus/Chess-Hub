@@ -167,10 +167,34 @@ final class ChessBoardState {
     func legalSquares(from square: Square) -> [Square] {
         board.legalMoves(forPieceAt: square)
     }
+    
+    /// Check if a move is a castling move
+    private func isCastlingMove(from: Square, to: Square) -> Bool {
+        guard let piece = board.position.piece(at: from) else { return false }
+        
+        // Must be a king
+        guard piece.kind == .king else { return false }
+        
+        // Castling moves the king 2 squares horizontally
+        let fromFileIdx = from.fileIndex
+        let toFileIdx = to.fileIndex
+        let fromRankIdx = from.rankIndex
+        let toRankIdx = to.rankIndex
+        
+        // Same rank, and 2 squares horizontally
+        return fromRankIdx == toRankIdx && abs(fromFileIdx - toFileIdx) == 2
+    }
 
     // MARK: Mutations
 
     func move(from: Square, to: Square, animated: Bool = false) {
+        // Check move type before making the move
+        let isCapture = board.position.piece(at: to) != nil
+        let isCastle = isCastlingMove(from: from, to: to)
+        
+        // Play move sound with haptic feedback
+        SoundManager.shared.playMove(isCapture: isCapture, isCastle: isCastle)
+        
         if animated {
             withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
                 board.move(pieceAt: from, to: to)
@@ -416,6 +440,10 @@ struct LiveChessBoardView: View {
         if !state.isDragging {
             let sq = displaySquare(point: v.startLocation, sqSize: sqSize)
             guard let piece = state.piece(at: sq), isPlayerPiece(piece) else { return }
+            
+            // Haptic feedback when picking up a piece
+            SoundManager.shared.playSelection()
+            
             state.isDragging        = true
             state.draggingFrom      = sq
             state.selectedSquare    = sq
@@ -437,6 +465,8 @@ struct LiveChessBoardView: View {
             if state.legalDestinations.contains(tapped) {
                 tryMove(from: sel, to: tapped)
             } else if let piece = state.piece(at: tapped), isPlayerPiece(piece) {
+                // Haptic feedback when selecting a different piece
+                SoundManager.shared.playSelection()
                 state.selectedSquare    = tapped
                 state.legalDestinations = state.legalSquares(from: tapped)
             } else {
@@ -444,6 +474,8 @@ struct LiveChessBoardView: View {
                 state.legalDestinations = []
             }
         } else if let piece = state.piece(at: tapped), isPlayerPiece(piece) {
+            // Haptic feedback when selecting a piece
+            SoundManager.shared.playSelection()
             state.selectedSquare    = tapped
             state.legalDestinations = state.legalSquares(from: tapped)
         }
@@ -464,6 +496,15 @@ struct LiveChessBoardView: View {
             state.lastMoveFrom   = from
             state.lastMoveTo     = to
             state.solutionIndex += 1
+            
+            // Check if puzzle is fully solved
+            if state.solutionIndex >= puzzle.playerMoves.count {
+                // Puzzle completed - play success sound
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    SoundManager.shared.playSuccess()
+                }
+            }
+            
             onMoveResult(true)
 
             if state.solutionIndex < puzzle.playerMoves.count {
@@ -472,6 +513,9 @@ struct LiveChessBoardView: View {
                 }
             }
         } else {
+            // Wrong move - play failure sound with haptic
+            SoundManager.shared.playFailure()
+            
             withAnimation(.easeIn(duration: 0.08))             { state.wrongFlash = true  }
             withAnimation(.easeOut(duration: 0.4).delay(0.08)) { state.wrongFlash = false }
             onMoveResult(false)

@@ -1,0 +1,112 @@
+═══════════════════════════════════════════════════════════════
+             CHESS HUB - SOUND FILE SPECIFICATIONS
+═══════════════════════════════════════════════════════════════
+
+Required Files (Add all 5 to this Sounds folder):
+──────────────────────────────────────────────────────────────
+
+1. move.mp3 (or move.wav)
+   ├─ Purpose: Regular piece movement
+   ├─ Duration: 0.2-0.5 seconds
+   ├─ Style: Soft, quick click or slide
+   ├─ Reference: Light tap on wooden board
+   └─ Plays at: 60% volume
+
+2. capture.mp3 (or capture.wav)
+   ├─ Purpose: Piece captures another piece
+   ├─ Duration: 0.2-0.5 seconds
+   ├─ Style: Sharper, more pronounced than move
+   ├─ Reference: Firm piece placement
+   └─ Plays at: 80% volume
+
+3. castle.mp3 (or castle.wav)
+   ├─ Purpose: Castling move (king + rook)
+   ├─ Duration: 0.3-0.6 seconds
+   ├─ Style: Double click or distinctive sound
+   ├─ Reference: Two pieces moving simultaneously
+   └─ Plays at: 70% volume
+
+4. success.mp3 (or success.wav)
+   ├─ Purpose: Puzzle solved correctly
+   ├─ Duration: 0.5-1.5 seconds
+   ├─ Style: Positive chime, victory bell
+   ├─ Reference: Level complete sound
+   └─ Plays at: 90% volume
+
+5. failure.mp3 (or failure.wav)
+   ├─ Purpose: Wrong move made
+   ├─ Duration: 0.3-0.8 seconds
+   ├─ Style: Short buzz, gentle error tone
+   ├─ Reference: Incorrect answer buzz (not harsh!)
+   └─ Plays at: 70% volume
+
+──────────────────────────────────────────────────────────────
+
+Audio Format:
+  • Format: MP3 (recommended) or WAV
+  • Sample Rate: 44.1 kHz
+  • Bit Rate: 128-192 kbps (MP3)
+  • Channels: Mono or Stereo (Mono is fine)
+  • Max File Size: < 200 KB each
+
+──────────────────────────────────────────────────────────────
+
+Installation:
+  1. Drag all 5 files into this Sounds folder in Xcode
+  2. Check "Copy items if needed"
+  3. Select "Chess Hub" target
+  4. Choose "Create folder references"
+  5. Build and run!
+
+──────────────────────────────────────────────────────────────
+
+Sound Suggestions (by priority):
+
+Essential (Must have good sounds):
+  • move.mp3 - Most frequently played
+  • capture.mp3 - Important feedback for tactics
+  • castle.mp3 - Distinctive for special move
+
+Nice to have (Can use simpler sounds):
+  • success.mp3 - Plays only on puzzle completion
+  • failure.mp3 - Plays on wrong moves
+
+──────────────────────────────────────────────────────────────
+
+Where to Find Sounds:
+
+Lichess Assets (MIT License):
+  → https://github.com/lichess-org/lila/tree/master/public/sound
+
+Freesound.org:
+  → Search "chess piece move"
+  → Search "wood click"
+  → Search "success chime"
+
+Mixkit.co:
+  → Game sounds section
+  → UI click sounds
+
+──────────────────────────────────────────────────────────────
+
+Testing After Installation:
+
+Play a puzzle and verify:
+  ✓ Selecting piece = Subtle vibration
+  ✓ Moving piece = "move.mp3" sound
+  ✓ Capturing piece = "capture.mp3" sound
+  ✓ Castling = "castle.mp3" sound (king moves 2 squares)
+  ✓ Wrong move = "failure.mp3" + strong vibration + red flash
+  ✓ Puzzle complete = "success.mp3" + celebration vibration
+
+──────────────────────────────────────────────────────────────
+
+Quick Tips:
+
+• Keep sounds SHORT to avoid overlap
+• Test on real device at different volumes
+• Sounds should feel satisfying but not annoying
+• Match the app's elegant aesthetic
+• Chess.com and Lichess are great references
+
+═══════════════════════════════════════════════════════════════
