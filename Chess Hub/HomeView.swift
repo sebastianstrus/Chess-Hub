@@ -278,6 +278,7 @@ struct RatingBadge: View {
             .background(rating.difficultyColor.opacity(0.15))
             .clipShape(Capsule())
             .overlay(Capsule().strokeBorder(rating.difficultyColor.opacity(0.4), lineWidth: 1))
+            .fixedSize()
     }
 }
 

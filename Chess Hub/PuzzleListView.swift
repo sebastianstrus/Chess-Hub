@@ -98,15 +98,15 @@ struct PuzzleRowCard: View {
             }
 
             // Details
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("Puzzle #\(puzzle.id)").font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(DS.Colors.textPrimary).lineLimit(1)
-                HStack(spacing: DS.Spacing.xs) {
-                    RatingBadge(rating: puzzle.rating)
-                    Text("· \(puzzle.playerMoves.count) move\(puzzle.playerMoves.count == 1 ? "" : "s")")
-                        .font(.system(size: 12)).foregroundColor(DS.Colors.textTertiary)
-                }
+                    .foregroundColor(DS.Colors.textPrimary)
+                    .fixedSize(horizontal: true, vertical: false)
+                RatingBadge(rating: puzzle.rating)
+                Text("\(puzzle.playerMoves.count) move\(puzzle.playerMoves.count == 1 ? "" : "s")")
+                    .font(.system(size: 12)).foregroundColor(DS.Colors.textTertiary)
             }
+            .layoutPriority(1)
             Spacer()
 
             // Favorite toggle
