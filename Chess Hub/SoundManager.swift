@@ -173,13 +173,13 @@ final class SoundManager {
     
     /// Play success sound with haptic feedback
     func playSuccess() {
-        playSound("success", volume: 0.9)
+        playSound("success", volume: 0.3)
         hapticSuccess()
     }
     
     /// Play failure sound with haptic feedback
     func playFailure() {
-        playSound("failure", volume: 0.7)
+        playSound("failure", volume: 0.1)
         hapticError()
     }
     
