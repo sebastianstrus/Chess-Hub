@@ -27,7 +27,7 @@ struct PuzzleListView: View {
 
                     LazyVStack(spacing: DS.Spacing.md) {
                         ForEach(Array(puzzles.enumerated()), id: \.element.id) { index, puzzle in
-                            NavigationLink(destination: PuzzleSolverView(puzzle: puzzle)) {
+                            NavigationLink(destination: PuzzleSolverView(puzzle: puzzle, theme: theme)) {
                                 PuzzleRowCard(puzzle: puzzle, index: index)
                             }
                             .buttonStyle(.plain)

@@ -23,7 +23,7 @@ struct FavoritesView: View {
 
                             LazyVStack(spacing: DS.Spacing.md) {
                                 ForEach(Array(favorites.enumerated()), id: \.element.id) { index, puzzle in
-                                    NavigationLink(destination: PuzzleSolverView(puzzle: puzzle)) {
+                                    NavigationLink(destination: PuzzleSolverView(puzzle: puzzle, theme: .favorites)) {
                                         PuzzleRowCard(puzzle: puzzle, index: index)
                                     }
                                     .buttonStyle(.plain)

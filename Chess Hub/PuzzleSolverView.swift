@@ -5,12 +5,23 @@ import ChessKit
 
 struct PuzzleSolverView: View {
     @Environment(PuzzleStore.self) private var store
-    let puzzle: Puzzle
+    @Environment(\.dismiss) private var dismiss
+    let initialPuzzle: Puzzle
+    let theme: PuzzleTheme?
 
+    @State private var currentPuzzle: Puzzle
     @State private var solveState: SolveState = .playing
     @State private var moveHistory: [MoveResult] = []
     @State private var boardID = UUID()   // force board reset on retry
     @State private var appeared = false
+    
+    init(puzzle: Puzzle, theme: PuzzleTheme? = nil) {
+        self.initialPuzzle = puzzle
+        self.theme = theme
+        self._currentPuzzle = State(initialValue: puzzle)
+    }
+    
+    var puzzle: Puzzle { currentPuzzle }
 
     enum SolveState {
         case playing
@@ -138,14 +149,29 @@ struct PuzzleSolverView: View {
                         .foregroundColor(DS.Colors.textTertiary)
                 }
                 Spacer()
-                Button("Retry") { resetPuzzle() }
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(DS.Colors.textSecondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(DS.Colors.surfaceElevated)
-                    .clipShape(Capsule())
-                    .overlay(Capsule().strokeBorder(DS.Colors.border, lineWidth: 1))
+                
+HStack(spacing: DS.Spacing.sm) {
+                    Button { resetPuzzle() } label: {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(DS.Colors.textSecondary)
+                            .frame(width: 36, height: 36)
+                            .background(DS.Colors.surfaceElevated)
+                            .clipShape(Circle())
+                            .overlay(Circle().strokeBorder(DS.Colors.border, lineWidth: 1))
+                    }
+                    
+                    if let nextPuzzle = store.nextPuzzle(after: puzzle, in: theme) {
+                        Button { loadNextPuzzle(nextPuzzle) } label: {
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 36, height: 36)
+                                .background(DS.Colors.success)
+                                .clipShape(Circle())
+                        }
+                    }
+                }
             }
             .padding(DS.Spacing.md)
             .background(DS.Colors.success.opacity(0.1))
@@ -167,14 +193,15 @@ struct PuzzleSolverView: View {
                         .foregroundColor(DS.Colors.textTertiary)
                 }
                 Spacer()
-                Button("Retry") { resetPuzzle() }
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(DS.Colors.textSecondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(DS.Colors.surfaceElevated)
-                    .clipShape(Capsule())
-                    .overlay(Capsule().strokeBorder(DS.Colors.border, lineWidth: 1))
+                Button { resetPuzzle() } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(DS.Colors.textSecondary)
+                        .frame(width: 36, height: 36)
+                        .background(DS.Colors.surfaceElevated)
+                        .clipShape(Circle())
+                        .overlay(Circle().strokeBorder(DS.Colors.border, lineWidth: 1))
+                }
             }
             .padding(DS.Spacing.md)
             .background(DS.Colors.danger.opacity(0.1))
@@ -325,6 +352,15 @@ struct PuzzleSolverView: View {
 
     private func resetPuzzle() {
         withAnimation(.easeInOut(duration: 0.3)) {
+            solveState = .playing
+            moveHistory = []
+            boardID = UUID()
+        }
+    }
+    
+    private func loadNextPuzzle(_ nextPuzzle: Puzzle) {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentPuzzle = nextPuzzle
             solveState = .playing
             moveHistory = []
             boardID = UUID()

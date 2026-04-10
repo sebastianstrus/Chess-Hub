@@ -95,6 +95,24 @@ class PuzzleStore {
         let puzzleDict = Dictionary(uniqueKeysWithValues: puzzles.map { ($0.id, $0) })
         return recentlySolvedIDs.prefix(20).compactMap { puzzleDict[$0] }
     }
+    
+    func nextPuzzle(after currentPuzzle: Puzzle, in theme: PuzzleTheme?) -> Puzzle? {
+        guard let theme = theme else { return nil }
+        
+        let puzzlesInTheme = puzzles(forTheme: theme)
+        guard let currentIndex = puzzlesInTheme.firstIndex(where: { $0.id == currentPuzzle.id }) else {
+            return puzzlesInTheme.first
+        }
+        
+        // Find next unsolved puzzle in the list
+        let remainingPuzzles = puzzlesInTheme.suffix(from: currentIndex + 1)
+        if let nextUnsolved = remainingPuzzles.first(where: { !solvedIDs.contains($0.id) }) {
+            return nextUnsolved
+        }
+        
+        // If no unsolved puzzles after current, wrap to beginning
+        return puzzlesInTheme.first(where: { !solvedIDs.contains($0.id) })
+    }
 
     func isSolved(_ id: String) -> Bool { solvedIDs.contains(id) }
     func isFavorite(_ id: String) -> Bool { favoriteIDs.contains(id) }
