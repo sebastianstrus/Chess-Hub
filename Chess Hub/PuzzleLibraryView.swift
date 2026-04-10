@@ -17,7 +17,7 @@ struct PuzzleLibraryView: View {
                         LazyVStack(spacing: DS.Spacing.md) {
                             ForEach(filteredThemes) { theme in
                                 NavigationLink(destination: PuzzleListView(theme: theme)) {
-                                    CategoryListRow(theme: theme, count: store.count(forTheme: theme))
+                                    CategoryListRow(theme: theme, count: store.totalCount(forTheme: theme))
                                 }
                                 .buttonStyle(.plain)
                             }

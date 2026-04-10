@@ -3,7 +3,7 @@ import SwiftUI
 struct FavoritesView: View {
     @Environment(PuzzleStore.self) private var store
 
-    var favorites: [Puzzle] { store.puzzles(forTheme: .favorites) }
+    var favorites: [Puzzle] { store.allFavorites }
 
     var body: some View {
         NavigationStack {

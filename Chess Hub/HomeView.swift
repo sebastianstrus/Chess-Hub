@@ -152,7 +152,7 @@ struct CategoryGridView: View {
         LazyVGrid(columns: columns, spacing: DS.Spacing.md) {
             ForEach(Array(PuzzleTheme.featured.enumerated()), id: \.element) { index, theme in
                 NavigationLink(destination: PuzzleListView(theme: theme)) {
-                    CategoryCard(theme: theme, count: store.count(forTheme: theme), index: index)
+                    CategoryCard(theme: theme, count: store.totalCount(forTheme: theme), index: index)
                 }
                 .buttonStyle(.plain)
             }

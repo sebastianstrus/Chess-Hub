@@ -3,6 +3,8 @@ import SwiftUI
 struct PuzzleListView: View {
     @Environment(PuzzleStore.self) private var store
     let theme: PuzzleTheme
+    
+    @State private var showFilterSheet = false
 
     var puzzles: [Puzzle] { store.puzzles(forTheme: theme) }
 
@@ -10,11 +12,18 @@ struct PuzzleListView: View {
         ZStack {
             DS.Colors.background.ignoresSafeArea()
             if puzzles.isEmpty {
-                EmptyStateView(message: "No puzzles found for \(theme.rawValue).")
+                EmptyStateView(message: "No puzzles found for \(theme.rawValue) with current filter.")
             } else {
                 ScrollView(showsIndicators: false) {
                     CategoryBannerView(theme: theme, count: puzzles.count)
-                        .padding(.bottom, DS.Spacing.lg)
+                        .padding(.bottom, DS.Spacing.sm)
+                    
+                    // Rating filter button
+                    RatingFilterButton(currentFilter: store.ratingFilter) {
+                        showFilterSheet = true
+                    }
+                    .padding(.horizontal, DS.Spacing.lg)
+                    .padding(.bottom, DS.Spacing.lg)
 
                     LazyVStack(spacing: DS.Spacing.md) {
                         ForEach(Array(puzzles.enumerated()), id: \.element.id) { index, puzzle in
@@ -31,6 +40,12 @@ struct PuzzleListView: View {
         .navigationTitle(theme.rawValue)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .sheet(isPresented: $showFilterSheet) {
+            RatingFilterSheet()
+                .environment(store)
+                .presentationDetents([.height(450)])
+                .presentationDragIndicator(.visible)
+        }
     }
 }
 
@@ -148,3 +163,121 @@ struct EmptyStateView: View {
         }
     }
 }
+// MARK: - Rating Filter Button
+struct RatingFilterButton: View {
+    let currentFilter: RatingRange
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: DS.Spacing.sm) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 14, weight: .semibold))
+                Text("Rating: \(currentFilter.rawValue)")
+                    .font(.system(size: 14, weight: .medium))
+                Spacer()
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundColor(currentFilter == .all ? DS.Colors.textSecondary : DS.Colors.gold)
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.vertical, DS.Spacing.sm)
+            .background(DS.Colors.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.md)
+                    .strokeBorder(currentFilter == .all ? DS.Colors.border : DS.Colors.gold.opacity(0.4), lineWidth: 1)
+            )
+        }
+    }
+}
+
+// MARK: - Rating Filter Sheet
+struct RatingFilterSheet: View {
+    @Environment(PuzzleStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                DS.Colors.background.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: DS.Spacing.sm) {
+                        ForEach(RatingRange.allCases) { range in
+                            RatingRangeCard(
+                                range: range,
+                                isSelected: store.ratingFilter == range
+                            ) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    store.ratingFilter = range
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    dismiss()
+                                }
+                            }
+                        }
+                    }
+                    .padding(DS.Spacing.lg)
+                }
+            }
+            .navigationTitle("Filter by Rating")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(DS.Colors.gold)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Rating Range Card
+struct RatingRangeCard: View {
+    let range: RatingRange
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: DS.Spacing.md) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .fill(isSelected ? DS.Colors.gold.opacity(0.15) : DS.Colors.surface)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: range.icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(isSelected ? DS.Colors.gold : DS.Colors.textSecondary)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(range.rawValue)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(DS.Colors.textPrimary)
+                    Text(range == .all ? "Show all puzzles" : "Rating \(range.rawValue)")
+                        .font(.system(size: 13))
+                        .foregroundColor(DS.Colors.textTertiary)
+                }
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(DS.Colors.gold)
+                }
+            }
+            .padding(DS.Spacing.md)
+            .background(DS.Colors.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.lg)
+                    .strokeBorder(isSelected ? DS.Colors.gold.opacity(0.4) : DS.Colors.border, lineWidth: 1.5)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+

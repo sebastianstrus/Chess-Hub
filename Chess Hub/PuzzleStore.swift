@@ -1,6 +1,39 @@
 import Foundation
 import Observation
 
+// MARK: - Rating Range
+
+enum RatingRange: String, CaseIterable, Identifiable {
+    case all = "All Levels"
+    case easy = "1200-1400"
+    case intermediate = "1400-1600"
+    case advanced = "1600+"
+    
+    var id: String { rawValue }
+    
+    var range: ClosedRange<Int> {
+        switch self {
+        case .all: return 0...9999
+        case .easy: return 1200...1400
+        case .intermediate: return 1400...1600
+        case .advanced: return 1600...9999
+        }
+    }
+    
+    func contains(_ rating: Int) -> Bool {
+        range.contains(rating)
+    }
+    
+    var icon: String {
+        switch self {
+        case .all: return "square.grid.2x2"
+        case .easy: return "star.fill"
+        case .intermediate: return "flame"
+        case .advanced: return "crown.fill"
+        }
+    }
+}
+
 // MARK: - PuzzleStore
 
 @Observable
@@ -12,6 +45,9 @@ class PuzzleStore {
 
     private(set) var solvedIDs: Set<String> = []
     private(set) var favoriteIDs: Set<String> = []
+    
+    // Rating filter
+    var ratingFilter: RatingRange = .all
 
     // MARK: Init
     init() {
@@ -22,14 +58,36 @@ class PuzzleStore {
     // MARK: - Queries
 
     func puzzles(forTheme theme: PuzzleTheme) -> [Puzzle] {
+        var filtered: [Puzzle]
+        
         if theme == .favorites {
-            return puzzles.filter { favoriteIDs.contains($0.id) }
+            filtered = puzzles.filter { favoriteIDs.contains($0.id) }
+        } else {
+            filtered = puzzles.filter { $0.themes.contains(theme.lichessKey) }
         }
-        return puzzles.filter { $0.themes.contains(theme.lichessKey) }
+        
+        // Apply rating filter
+        if ratingFilter != .all {
+            filtered = filtered.filter { ratingFilter.contains($0.rating) }
+        }
+        
+        return filtered
     }
 
     func count(forTheme theme: PuzzleTheme) -> Int {
         puzzles(forTheme: theme).count
+    }
+    
+    func totalCount(forTheme theme: PuzzleTheme) -> Int {
+        if theme == .favorites {
+            return puzzles.filter { favoriteIDs.contains($0.id) }.count
+        } else {
+            return puzzles.filter { $0.themes.contains(theme.lichessKey) }.count
+        }
+    }
+    
+    var allFavorites: [Puzzle] {
+        puzzles.filter { favoriteIDs.contains($0.id) }
     }
 
     func isSolved(_ id: String) -> Bool { solvedIDs.contains(id) }
