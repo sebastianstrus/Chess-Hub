@@ -45,6 +45,7 @@ class PuzzleStore {
 
     private(set) var solvedIDs: Set<String> = []
     private(set) var favoriteIDs: Set<String> = []
+    private(set) var recentlySolvedIDs: [String] = []
     
     // Rating filter
     var ratingFilter: RatingRange = .all
@@ -89,6 +90,11 @@ class PuzzleStore {
     var allFavorites: [Puzzle] {
         puzzles.filter { favoriteIDs.contains($0.id) }
     }
+    
+    var recentlySolved: [Puzzle] {
+        let puzzleDict = Dictionary(uniqueKeysWithValues: puzzles.map { ($0.id, $0) })
+        return recentlySolvedIDs.prefix(20).compactMap { puzzleDict[$0] }
+    }
 
     func isSolved(_ id: String) -> Bool { solvedIDs.contains(id) }
     func isFavorite(_ id: String) -> Bool { favoriteIDs.contains(id) }
@@ -97,6 +103,16 @@ class PuzzleStore {
 
     func markSolved(_ id: String) {
         solvedIDs.insert(id)
+        
+        // Remove if already in list (to avoid duplicates)
+        recentlySolvedIDs.removeAll { $0 == id }
+        // Add to beginning of list
+        recentlySolvedIDs.insert(id, at: 0)
+        // Keep only last 100 (we show 20, but store more for safety)
+        if recentlySolvedIDs.count > 100 {
+            recentlySolvedIDs = Array(recentlySolvedIDs.prefix(100))
+        }
+        
         saveProgress()
     }
 
@@ -135,14 +151,17 @@ class PuzzleStore {
 
     private let solvedKey   = "solvedPuzzleIDs"
     private let favoritesKey = "favoritePuzzleIDs"
+    private let recentlySolvedKey = "recentlySolvedPuzzleIDs"
 
     private func saveProgress() {
         UserDefaults.standard.set(Array(solvedIDs), forKey: solvedKey)
+        UserDefaults.standard.set(recentlySolvedIDs, forKey: recentlySolvedKey)
     }
 
     private func loadProgress() {
         solvedIDs   = Set(UserDefaults.standard.stringArray(forKey: solvedKey) ?? [])
         favoriteIDs = Set(UserDefaults.standard.stringArray(forKey: favoritesKey) ?? [])
+        recentlySolvedIDs = UserDefaults.standard.stringArray(forKey: recentlySolvedKey) ?? []
     }
 
     private func saveFavorites() {

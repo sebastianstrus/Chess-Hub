@@ -26,6 +26,14 @@ struct HomeView: View {
                         .padding(.bottom, DS.Spacing.xl)
 
                         VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                            SectionHeader(title: "Recently Solved", subtitle: "Review what you learned")
+                                .padding(.horizontal, DS.Spacing.lg)
+                            RecentlySolvedSection()
+                                .padding(.horizontal, DS.Spacing.lg)
+                        }
+                        .padding(.bottom, DS.Spacing.xl)
+
+                        VStack(alignment: .leading, spacing: DS.Spacing.md) {
                             SectionHeader(title: "Quick Challenge", subtitle: "Jump right in")
                                 .padding(.horizontal, DS.Spacing.lg)
                             DailyPuzzleCard()
@@ -297,6 +305,124 @@ struct ChessBoardPattern: View {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Recently Solved Section
+struct RecentlySolvedSection: View {
+    @Environment(PuzzleStore.self) private var store
+    
+    var recentPuzzles: [Puzzle] { store.recentlySolved }
+    
+    var body: some View {
+        if recentPuzzles.isEmpty {
+            RecentlySolvedEmptyCard()
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DS.Spacing.md) {
+                    ForEach(Array(recentPuzzles.prefix(20).enumerated()), id: \.element.id) { index, puzzle in
+                        NavigationLink(destination: PuzzleSolverView(puzzle: puzzle)) {
+                            RecentlySolvedCard(puzzle: puzzle, index: index)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct RecentlySolvedCard: View {
+    @Environment(PuzzleStore.self) private var store
+    let puzzle: Puzzle
+    let index: Int
+    @State private var appeared = false
+    
+    var isFav: Bool { store.isFavorite(puzzle.id) }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            // Mini board
+            ZStack {
+                RoundedRectangle(cornerRadius: DS.Radius.md)
+                    .fill(DS.Colors.surface)
+                    .frame(width: 140, height: 140)
+                    .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Colors.success.opacity(0.3), lineWidth: 1.5))
+                MiniChessBoard()
+                    .frame(width: 120, height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                
+                // Solved checkmark overlay
+                VStack {
+                    HStack {
+                        Spacer()
+                        ZStack {
+                            Circle()
+                                .fill(DS.Colors.success)
+                                .frame(width: 28, height: 28)
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        .offset(x: -8, y: 8)
+                    }
+                    Spacer()
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Puzzle #\(puzzle.id)")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(DS.Colors.textPrimary)
+                    .lineLimit(1)
+                
+                RatingBadge(rating: puzzle.rating)
+            }
+        }
+        .frame(width: 140)
+        .opacity(appeared ? 1 : 0)
+        .offset(x: appeared ? 0 : -10)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.3).delay(Double(min(index, 10)) * 0.05)) {
+                appeared = true
+            }
+        }
+    }
+}
+
+struct RecentlySolvedEmptyCard: View {
+    var body: some View {
+        VStack(spacing: DS.Spacing.md) {
+            ZStack {
+                RoundedRectangle(cornerRadius: DS.Radius.md)
+                    .fill(DS.Colors.surfaceElevated)
+                    .frame(height: 100)
+                    .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Colors.border, lineWidth: 1))
+                
+                HStack(spacing: DS.Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(DS.Colors.success.opacity(0.1))
+                            .frame(width: 56, height: 56)
+                        Image(systemName: "checkmark.circle")
+                            .font(.system(size: 28))
+                            .foregroundColor(DS.Colors.success.opacity(0.5))
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("No Solved Puzzles Yet")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(DS.Colors.textPrimary)
+                        Text("Solve your first puzzle to see it here")
+                            .font(.system(size: 13))
+                            .foregroundColor(DS.Colors.textSecondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                }
+                .padding(DS.Spacing.md)
             }
         }
     }
