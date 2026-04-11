@@ -36,3 +36,111 @@ extension Int {
         }
     }
 }
+
+// MARK: - Static Chess Board
+
+struct StaticChessBoard: View {
+    let fen: String
+    let flipped: Bool
+    
+    init(fen: String, flipped: Bool = false) {
+        self.fen = fen
+        self.flipped = flipped
+    }
+    
+    var body: some View {
+        GeometryReader { geo in
+            let sq = geo.size.width / 8
+            ZStack {
+                // Checkered background
+                VStack(spacing: 0) {
+                    ForEach(0..<8, id: \.self) { row in
+                        HStack(spacing: 0) {
+                            ForEach(0..<8, id: \.self) { col in
+                                Rectangle()
+                                    .fill((row + col).isMultiple(of: 2) ? DS.Colors.pieceLight : DS.Colors.pieceDark)
+                                    .frame(width: sq, height: sq)
+                            }
+                        }
+                    }
+                }
+                
+                // Pieces from FEN
+                ForEach(Array(parseFEN().enumerated()), id: \.offset) { index, piece in
+                    if let piece = piece {
+                        let row = flipped ? (7 - index / 8) : (index / 8)
+                        let col = flipped ? (7 - index % 8) : (index % 8)
+                        Image(piece.imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: sq * 0.88, height: sq * 0.88)
+                            .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
+                            .position(x: CGFloat(col) * sq + sq/2, y: CGFloat(row) * sq + sq/2)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func parseFEN() -> [ChessPiece?] {
+        let fenParts = fen.split(separator: " ")
+        guard !fenParts.isEmpty else { return Array(repeating: nil, count: 64) }
+        
+        let rows = fenParts[0].split(separator: "/")
+        var board: [ChessPiece?] = []
+        
+        for row in rows {
+            for char in row {
+                if let digit = char.wholeNumberValue {
+                    board.append(contentsOf: Array(repeating: nil, count: digit))
+                } else {
+                    board.append(ChessPiece(from: char))
+                }
+            }
+        }
+        
+        return board
+    }
+}
+
+struct ChessPiece {
+    let isWhite: Bool
+    let type: PieceType
+    
+    enum PieceType {
+        case pawn, knight, bishop, rook, queen, king
+    }
+    
+    init?(from char: Character) {
+        let lower = char.lowercased().first!
+        guard let type = Self.charToType(lower) else { return nil }
+        self.type = type
+        self.isWhite = char.isUppercase
+    }
+    
+    private static func charToType(_ char: Character) -> PieceType? {
+        switch char {
+        case "p": return .pawn
+        case "n": return .knight
+        case "b": return .bishop
+        case "r": return .rook
+        case "q": return .queen
+        case "k": return .king
+        default: return nil
+        }
+    }
+    
+    var imageName: String {
+        let color = isWhite ? "w" : "b"
+        let kind: String
+        switch type {
+        case .king: kind = "K"
+        case .queen: kind = "Q"
+        case .rook: kind = "R"
+        case .bishop: kind = "B"
+        case .knight: kind = "N"
+        case .pawn: kind = "P"
+        }
+        return "\(color)\(kind)"
+    }
+}

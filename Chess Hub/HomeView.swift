@@ -229,7 +229,8 @@ struct DailyPuzzleCard: View {
                         RoundedRectangle(cornerRadius: DS.Radius.md)
                             .fill(DS.Colors.surface).frame(width: 72, height: 72)
                             .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Colors.border, lineWidth: 1))
-                        MiniChessBoard().frame(width: 56, height: 56)
+                        StaticChessBoard(fen: puzzle.fen, flipped: !puzzle.playerIsWhite)
+                            .frame(width: 56, height: 56)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
                     VStack(alignment: .leading, spacing: DS.Spacing.xs) {
@@ -350,7 +351,7 @@ struct RecentlySolvedCard: View {
                     .fill(DS.Colors.surface)
                     .frame(width: 140, height: 140)
                     .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Colors.success.opacity(0.3), lineWidth: 1.5))
-                MiniChessBoard()
+                StaticChessBoard(fen: puzzle.fen, flipped: !puzzle.playerIsWhite)
                     .frame(width: 120, height: 120)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                 

@@ -109,7 +109,9 @@ struct PuzzleRowCard: View {
             ZStack {
                 RoundedRectangle(cornerRadius: DS.Radius.sm).fill(DS.Colors.surface).frame(width: 56, height: 56)
                     .overlay(RoundedRectangle(cornerRadius: DS.Radius.sm).strokeBorder(DS.Colors.border, lineWidth: 1))
-                MiniChessBoard().frame(width: 44, height: 44).clipShape(RoundedRectangle(cornerRadius: 3))
+                StaticChessBoard(fen: puzzle.fen, flipped: !puzzle.playerIsWhite)
+                    .frame(width: 44, height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 3))
             }
 
             // Details
