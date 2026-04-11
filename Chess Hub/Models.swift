@@ -42,31 +42,30 @@ extension Int {
 struct StaticChessBoard: View {
     let fen: String
     let flipped: Bool
+    private let pieces: [ChessPiece?]
     
     init(fen: String, flipped: Bool = false) {
         self.fen = fen
         self.flipped = flipped
+        self.pieces = Self.parseFEN(fen)
     }
     
     var body: some View {
         GeometryReader { geo in
             let sq = geo.size.width / 8
-            ZStack {
+            ZStack(alignment: .topLeading) {
                 // Checkered background
-                VStack(spacing: 0) {
-                    ForEach(0..<8, id: \.self) { row in
-                        HStack(spacing: 0) {
-                            ForEach(0..<8, id: \.self) { col in
-                                Rectangle()
-                                    .fill((row + col).isMultiple(of: 2) ? DS.Colors.pieceLight : DS.Colors.pieceDark)
-                                    .frame(width: sq, height: sq)
-                            }
-                        }
-                    }
+                ForEach(0..<64, id: \.self) { idx in
+                    let row = idx / 8
+                    let col = idx % 8
+                    Rectangle()
+                        .fill((row + col).isMultiple(of: 2) ? DS.Colors.pieceLight : DS.Colors.pieceDark)
+                        .frame(width: sq, height: sq)
+                        .position(x: CGFloat(col) * sq + sq/2, y: CGFloat(row) * sq + sq/2)
                 }
                 
                 // Pieces from FEN
-                ForEach(Array(parseFEN().enumerated()), id: \.offset) { index, piece in
+                ForEach(Array(pieces.enumerated()), id: \.offset) { index, piece in
                     if let piece = piece {
                         let row = flipped ? (7 - index / 8) : (index / 8)
                         let col = flipped ? (7 - index % 8) : (index % 8)
@@ -74,15 +73,15 @@ struct StaticChessBoard: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: sq * 0.88, height: sq * 0.88)
-                            .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
                             .position(x: CGFloat(col) * sq + sq/2, y: CGFloat(row) * sq + sq/2)
                     }
                 }
             }
+            .drawingGroup()
         }
     }
     
-    private func parseFEN() -> [ChessPiece?] {
+    private static func parseFEN(_ fen: String) -> [ChessPiece?] {
         let fenParts = fen.split(separator: " ")
         guard !fenParts.isEmpty else { return Array(repeating: nil, count: 64) }
         
