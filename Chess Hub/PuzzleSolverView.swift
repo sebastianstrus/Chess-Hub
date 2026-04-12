@@ -36,6 +36,7 @@ struct PuzzleSolverView: View {
     }
 
     var isFav: Bool { store.isFavorite(puzzle.id) }
+    var playerMovesCount: Int { (puzzle.playerMoves.count + 1) / 2 }
 
     var body: some View {
         ZStack {
@@ -126,9 +127,14 @@ struct PuzzleSolverView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(DS.Colors.textPrimary)
                 Spacer()
-                Text("Find the best continuation")
-                    .font(.system(size: 12))
-                    .foregroundColor(DS.Colors.textTertiary)
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(DS.Colors.gold)
+                    Text("Find \(playerMovesCount) move\(playerMovesCount == 1 ? "" : "s")")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(DS.Colors.textSecondary)
+                }
             }
             .padding(DS.Spacing.md)
             .background(DS.Colors.surfaceElevated)

@@ -36,8 +36,12 @@ struct HomeView: View {
                         VStack(alignment: .leading, spacing: DS.Spacing.md) {
                             SectionHeader(title: "Quick Challenge", subtitle: "Jump right in")
                                 .padding(.horizontal, DS.Spacing.lg)
-                            DailyPuzzleCard()
-                                .padding(.horizontal, DS.Spacing.lg)
+                            
+                            VStack(spacing: DS.Spacing.md) {
+                                PuzzleRushCard()
+                                DailyPuzzleCard()
+                            }
+                            .padding(.horizontal, DS.Spacing.lg)
                         }
                         .padding(.bottom, DS.Spacing.xxxl)
                     }
@@ -212,6 +216,62 @@ struct CategoryCard: View {
 
     private var decorativePiece: String {
         ["♙","♘","♗","♖","♛","♚","♟","♞"][index % 8]
+    }
+}
+
+// MARK: - Puzzle Rush Card
+struct PuzzleRushCard: View {
+    @Environment(PuzzleStore.self) private var store
+    
+    var body: some View {
+        NavigationLink(destination: PuzzleRushView(store: store)) {
+            HStack(spacing: DS.Spacing.md) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: DS.Radius.md)
+                        .fill(
+                            LinearGradient(
+                                colors: [DS.Colors.gold.opacity(0.2), DS.Colors.gold.opacity(0.05)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 72, height: 72)
+                        .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Colors.gold.opacity(0.4), lineWidth: 1))
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(DS.Colors.gold)
+                }
+                
+                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    HStack(spacing: 4) {
+                        Text("PUZZLE RUSH")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(DS.Colors.gold)
+                            .tracking(1.5)
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(DS.Colors.gold)
+                    }
+                    Text("Time Attack")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(DS.Colors.textPrimary)
+                    Text("3 minutes · 3 lives")
+                        .font(.system(size: 13))
+                        .foregroundColor(DS.Colors.textTertiary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(DS.Colors.textTertiary)
+            }
+            .padding(DS.Spacing.md)
+            .background(DS.Colors.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+            .overlay(RoundedRectangle(cornerRadius: DS.Radius.lg).strokeBorder(DS.Colors.gold.opacity(0.25), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 }
 
