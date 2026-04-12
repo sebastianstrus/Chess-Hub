@@ -11,6 +11,8 @@ class PuzzleRushManager {
     private(set) var livesRemaining: Int = 3
     private(set) var timeRemaining: TimeInterval = 180 // 3 minutes
     private(set) var puzzleQueue: [Puzzle] = []
+    private(set) var showCorrectFeedback: Bool = false
+    private(set) var showWrongFeedback: Bool = false
     
     private var timer: Timer?
     private let puzzleStore: PuzzleStore
@@ -72,14 +74,36 @@ class PuzzleRushManager {
     
     func handlePuzzleSolved(correct: Bool) {
         if correct {
+            // Play success sound
+            SoundManager.shared.playSuccess()
+            
+            // Show feedback
+            showCorrectFeedback = true
             score += 1
-            loadNextPuzzle()
+            
+            // Delay before loading next puzzle
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.showCorrectFeedback = false
+                self.loadNextPuzzle()
+            }
         } else {
+            // Play failure sound
+            SoundManager.shared.playFailure()
+            
+            // Show feedback
+            showWrongFeedback = true
             livesRemaining -= 1
+            
             if livesRemaining <= 0 {
-                endGame()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    self.showWrongFeedback = false
+                    self.endGame()
+                }
             } else {
-                loadNextPuzzle()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.showWrongFeedback = false
+                    self.loadNextPuzzle()
+                }
             }
         }
     }
@@ -274,37 +298,72 @@ struct PuzzleRushView: View {
     // MARK: - Playing View
     
     private var playingView: some View {
-        VStack(spacing: 0) {
-            // Stats Header
-            statsHeader
-                .padding(.horizontal, DS.Spacing.lg)
-                .padding(.top, DS.Spacing.md)
-                .padding(.bottom, DS.Spacing.lg)
-            
-            // Puzzle Board
-            if let puzzle = manager.currentPuzzle {
-                ScrollView {
-                    VStack(spacing: DS.Spacing.lg) {
-                        LiveChessBoardView(puzzle: puzzle) { correct in
-                            manager.handlePuzzleSolved(correct: correct)
+        ZStack {
+            VStack(spacing: 0) {
+                // Stats Header
+                statsHeader
+                    .padding(.horizontal, DS.Spacing.lg)
+                    .padding(.top, DS.Spacing.md)
+                    .padding(.bottom, DS.Spacing.lg)
+                
+                // Puzzle Board
+                if let puzzle = manager.currentPuzzle {
+                    ScrollView {
+                        VStack(spacing: DS.Spacing.lg) {
+                            LiveChessBoardView(puzzle: puzzle) { correct in
+                                manager.handlePuzzleSolved(correct: correct)
+                            }
+                            .id(puzzle.id)
+                            .padding(.horizontal, DS.Spacing.lg)
+                            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+                            .shadow(color: .black.opacity(0.4), radius: 20, x: 0, y: 8)
+                            
+                            // Puzzle info
+                            HStack {
+                                Text("Puzzle #\(puzzle.id)")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(DS.Colors.textSecondary)
+                                Spacer()
+                                RatingBadge(rating: puzzle.rating)
+                            }
+                            .padding(.horizontal, DS.Spacing.lg)
+                            .padding(.bottom, DS.Spacing.xxxl)
                         }
-                        .id(puzzle.id)
-                        .padding(.horizontal, DS.Spacing.lg)
-                        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
-                        .shadow(color: .black.opacity(0.4), radius: 20, x: 0, y: 8)
-                        
-                        // Puzzle info
-                        HStack {
-                            Text("Puzzle #\(puzzle.id)")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(DS.Colors.textSecondary)
-                            Spacer()
-                            RatingBadge(rating: puzzle.rating)
-                        }
-                        .padding(.horizontal, DS.Spacing.lg)
-                        .padding(.bottom, DS.Spacing.xxxl)
                     }
                 }
+            }
+            
+            // Feedback overlays - elegant flash effect
+            if manager.showCorrectFeedback {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                DS.Colors.success.opacity(0.08),
+                                DS.Colors.success.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
+            
+            if manager.showWrongFeedback {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                DS.Colors.danger.opacity(0.08),
+                                DS.Colors.danger.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
             }
         }
     }
