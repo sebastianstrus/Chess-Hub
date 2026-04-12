@@ -147,6 +147,22 @@ class PuzzleStore {
 
     var totalSolved: Int { solvedIDs.count }
     var totalFavorites: Int { favoriteIDs.count }
+    
+    // MARK: - Daily Puzzle
+    
+    var dailyPuzzle: Puzzle? {
+        guard !puzzles.isEmpty else { return nil }
+        
+        // Use current date to deterministically select a puzzle
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let referenceDate = calendar.date(from: DateComponents(year: 2024, month: 1, day: 1))!
+        let daysSinceReference = calendar.dateComponents([.day], from: referenceDate, to: today).day ?? 0
+        
+        // Use day number to select a puzzle (cycles through all puzzles)
+        let index = daysSinceReference % puzzles.count
+        return puzzles[index]
+    }
 
     // MARK: - Load JSON
 

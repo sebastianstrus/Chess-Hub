@@ -279,7 +279,7 @@ struct PuzzleRushCard: View {
 struct DailyPuzzleCard: View {
     @Environment(PuzzleStore.self) private var store
 
-    var puzzle: Puzzle? { store.puzzles.first }
+    var puzzle: Puzzle? { store.dailyPuzzle }
 
     var body: some View {
         if let puzzle = puzzle {
