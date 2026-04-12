@@ -163,6 +163,11 @@ class PuzzleStore {
         let index = daysSinceReference % puzzles.count
         return puzzles[index]
     }
+    
+    var isDailyPuzzleSolved: Bool {
+        guard let daily = dailyPuzzle else { return false }
+        return isSolved(daily.id)
+    }
 
     // MARK: - Load JSON
 

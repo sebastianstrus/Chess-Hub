@@ -280,6 +280,7 @@ struct DailyPuzzleCard: View {
     @Environment(PuzzleStore.self) private var store
 
     var puzzle: Puzzle? { store.dailyPuzzle }
+    var isSolved: Bool { store.isDailyPuzzleSolved }
 
     var body: some View {
         if let puzzle = puzzle {
@@ -288,21 +289,49 @@ struct DailyPuzzleCard: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: DS.Radius.md)
                             .fill(DS.Colors.surface).frame(width: 72, height: 72)
-                            .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Colors.border, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(isSolved ? DS.Colors.success.opacity(0.4) : DS.Colors.border, lineWidth: 1))
                         StaticChessBoard(fen: puzzle.fen, flipped: !puzzle.playerIsWhite)
                             .frame(width: 56, height: 56)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
+                        
+                        // Solved checkmark overlay
+                        if isSolved {
+                            VStack {
+                                HStack {
+                                    Spacer()
+                                    ZStack {
+                                        Circle()
+                                            .fill(DS.Colors.success)
+                                            .frame(width: 20, height: 20)
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundColor(.white)
+                                    }
+                                    .offset(x: 4, y: -4)
+                                }
+                                Spacer()
+                            }
+                        }
                     }
                     VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                        Text("DAILY PUZZLE").font(.system(size: 10, weight: .bold))
-                            .foregroundColor(DS.Colors.gold).tracking(1.5)
+                        HStack(spacing: 4) {
+                            Text("DAILY PUZZLE").font(.system(size: 10, weight: .bold))
+                                .foregroundColor(DS.Colors.gold).tracking(1.5)
+                            if isSolved {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(DS.Colors.success)
+                            }
+                        }
                         Text("Puzzle #\(puzzle.id)").font(.system(size: 16, weight: .semibold))
                             .foregroundColor(DS.Colors.textPrimary)
-                        Text("Rating \(puzzle.rating)").font(.system(size: 13))
-                            .foregroundColor(DS.Colors.textTertiary)
+                        Text(isSolved ? "Completed today" : "Rating \(puzzle.rating)").font(.system(size: 13))
+                            .foregroundColor(isSolved ? DS.Colors.success : DS.Colors.textTertiary)
                     }
                     Spacer()
-                    RatingBadge(rating: puzzle.rating)
+                    if !isSolved {
+                        RatingBadge(rating: puzzle.rating)
+                    }
                     Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
                         .foregroundColor(DS.Colors.textTertiary)
                 }
